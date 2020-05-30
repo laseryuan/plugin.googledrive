@@ -11,6 +11,7 @@ import shutil
 import time
 from collections import defaultdict
 import mock
+from mock import patch
 
 cwd = os.path.dirname(os.path.abspath(__file__+"/../../"))
 configdir = os.path.join(cwd, 'config')
@@ -49,6 +50,10 @@ class FakeAddon(object):
     def getLocalizedString(self, id_):
         return {32000: u'Привет, мир!', 32001: u'Я тебя люблю.'}[id_]
 
+class FakeCloudDriveAddon(object):
+    def __init__(self, id_='test.addon'):
+        self._id = id_
+        self._settings = {}
 
 class FakeWindow(object):
     def __init__(self, id_=-1):
@@ -87,10 +92,20 @@ sys.path.append(os.path.join(cwd, 'script.module.clouddrive.common'))
 
 from resources.lib.provider.googledrive import GoogleDrive
 
+mock_xbmcvfs = mock.MagicMock()
+sys.modules['xbmcvfs'] = mock_xbmcvfs
+
+mock_xbmcplugin = mock.MagicMock()
+sys.modules['xbmcplugin'] = mock_xbmcplugin
+
+#  mock_clouddriveaddon = mock.MagicMock()
+#  sys.modules['clouddrive.common.ui.addon'] = mock_clouddriveaddon
+
+from addon import GoogleDriveAddon
 # Begin tests
 
-class AddonTestCase(unittest.TestCase):
-    def test_gdrive_process_files(self):
+class GDriveTestCase(unittest.TestCase):
+    def test_process_files(self):
         """
         Test addon settings normalization
         """
@@ -101,6 +116,59 @@ class AddonTestCase(unittest.TestCase):
 
         items = gdrive.process_files(files, parameters)
         self.assertEqual(len(items), 3)
+
+class GDriveAddonTestCase(unittest.TestCase):
+    def test_gdrive_process_files(self):
+        """
+        Test addon settings normalization
+        """
+        items = [{'deleted': False,
+          'description': '',
+          'drive_id': u'10773356246826176512',
+          'folder': {'child_count': 0},
+          'id': u'1929tbJai-HeSBke9HT3jmdIjiAbj23xDCmFknz4HnCM',
+          'last_modified_date': u'2020-05-28T05:20:29.542Z',
+          'mimetype': u'application/vnd.google-apps.folder',
+          'name': u'Photos - unsown',
+          'name_extension': '',
+          'parent': u'0AIFL1ZwF1rkjUk9PVA',
+          'size': 0L},
+         {'deleted': False,
+          'description': '',
+          'drive_id': u'10773356246826176512',
+          'folder': {'child_count': 0},
+          'id': u'1ZJC-WI9BusSMDIKLtPrX7o-mufjB4VhY',
+          'last_modified_date': u'2019-03-25T00:32:24.059Z',
+          'mimetype': u'application/vnd.google-apps.folder',
+          'name': u'Archive',
+          'name_extension': '',
+          'parent': u'0AIFL1ZwF1rkjUk9PVA',
+          'size': 0L},
+         {'deleted': False,
+          'description': u'[Star] [test]',
+          'drive_id': u'00075374721629811014',
+          'id': u'18cvSs9r93ysjiyt7YG6AoNWUzaUksBUnnA',
+          'last_modified_date': u'2018-03-06T08:07:50.984Z',
+          'mimetype': u'video/mp4',
+          'name': u'Back.to.the.Future.1985.1080p.BluRay.x264-NODLABS.mkv',
+          'name_extension': u'mkv',
+          'parent': u'0AIFL1ZwF1rkjUk9PVA',
+          'size': 3655839996L,
+          'thumbnail': u'https://lh3.googleusercontent.com/0x52uJgUJvpIeA1xvtrwBKK6jvj7H-Qur0ox5VfutpsH4Vl4Ow0GG5-cZkOj-1b-ks6Vhru8od3Q=s220',
+          'video': {'duration': 6965L, 'height': 1040, 'width': 1920}}]
+
+        driveid = '10773356246826176512'
+
+        def mock_init(self):
+            self._addon_url = 'http://fake_url'
+            pass
+        with patch('addon.GoogleDriveAddon.__init__', new=mock_init):
+            gdrive = GoogleDriveAddon()
+        with patch('clouddrive.common.ui.utils.KodiUtils.to_kodi_item_date_str', return_value=None):
+            with patch('clouddrive.common.ui.utils.KodiUtils.to_datetime', return_value=None):
+                gdrive._content_type = "video"
+                gdrive._common_addon = mock.MagicMock()
+                gdrive._process_items(items, driveid)
 
 if __name__ == '__main__':
     unittest.main()
