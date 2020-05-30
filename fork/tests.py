@@ -168,6 +168,7 @@ class GDriveAddonTestCase(unittest.TestCase):
             with patch('clouddrive.common.ui.utils.KodiUtils.to_datetime', return_value=None):
                 gdrive._content_type = "video"
                 gdrive._common_addon = mock.MagicMock()
+                gdrive.get_context_options = mock.MagicMock()
                 gdrive._process_items(items, driveid)
 
 if __name__ == '__main__':
