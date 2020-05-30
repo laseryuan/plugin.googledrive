@@ -1,0 +1,3 @@
+[submodule "fork/script.module.clouddrive.common"]
+	path = fork/script.module.clouddrive.common
+	url = git@github.com:laseryuan/script.module.clouddrive.common.git
