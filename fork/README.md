@@ -30,6 +30,7 @@ docker run -it --rm --name=kodi \
 
 cd ~/.kodi/addons/plugin.googledrive/
 python fork/tests.py
+python fork/tests.py GDriveAddonTestCase.test_gdrive_process_files
 cat /home/kodi/.kodi/temp/kodi.log
 ```
 
