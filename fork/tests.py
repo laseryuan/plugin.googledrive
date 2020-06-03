@@ -171,5 +171,35 @@ class GDriveAddonTestCase(unittest.TestCase):
                 gdrive._addon = mock.MagicMock()
                 gdrive._process_items(items, driveid)
 
+    def test_check_google_ban(self):
+        driveid = '10773356246826176512'
+        item_driveid = '00075374721629811014'
+        item_id = '18cvSs9r93ysjiyt7YG6AoNWUzaUksBUnnA'
+
+        def mock_init(self):
+            self._addon_url = 'http://fake_url'
+            pass
+        with patch('addon.GoogleDriveAddon.__init__', new=mock_init):
+            gdrive = GoogleDriveAddon()
+        gdrive._provider = mock.MagicMock()
+        gdrive._progress_dialog = mock.MagicMock()
+        gdrive.check_google_ban(driveid, item_driveid, item_id)
+
+    def test_delete_file(self):
+        driveid = '10773356246826176512'
+        item_driveid = '00075374721629811014'
+        item_id = '18cvSs9r93ysjiyt7YG6AoNWUzaUksBUnnA'
+        item = {'download_info': {'url': u'https://www.googleapis.com/drive/v3/files/18cvSs9r93ysjiyt7YG6AoNWUzaUksBUnnA?alt=media'}, 'description': u'[Star] [test]', 'parent': u'0AIFL1ZwF1rkjUk9PVA', 'deleted': False, 'last_modified_date': u'2018-03-06T08:07:50.984Z', 'video': {'duration': 6965L, 'width': 1920, 'height': 1040}, 'id': u'18cvSs9r93ysjiyt7YG6AoNWUzaUksBUnnA', 'size': 3655839996L, 'mimetype': u'video/mp4', 'name': u'Back.to.the.Future.1985.1080p.BluRay.x264-NODLABS.mkv', 'thumbnail': u'https://lh3.googleusercontent.com/kG2Hh5oyMzx8Ixoet43tbFZBP7cOu_ezW1SIlaYFLFwIP3dL0okNxRtUMbpnaZoeTHeIBO319y9c=s220', 'drive_id': u'00075374721629811014', 'name_extension': u'mkv'}
+
+        def mock_init(self):
+            self._addon_url = 'http://fake_url'
+            pass
+        with patch('addon.GoogleDriveAddon.__init__', new=mock_init):
+            gdrive = GoogleDriveAddon()
+        gdrive._provider = mock.MagicMock()
+        gdrive._provider.get_item = mock.MagicMock(return_value=item)
+        gdrive._progress_dialog = mock.MagicMock()
+        gdrive.delete_file(driveid, item_driveid, item_id)
+
 if __name__ == '__main__':
     unittest.main()

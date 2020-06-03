@@ -199,5 +199,33 @@ class GoogleDriveAddon(CloudDriveAddon):
                         self._addon.getLocalizedString(32073) % '[B]%s[/B]' % Utils.str(request.response_code),
                         request.response_text
         )
+    
+    def delete_file(self, driveid, item_driveid=None, item_id=None):
+        self._provider.configure(self._account_manager, driveid)
+        self._progress_dialog.update(0, '')
+        item = self._provider.get_item(item_driveid=item_driveid, item_id=item_id, include_download_info = True)
+        url = item['download_info']['url']
+        request_params = {
+            'read_content' : False,
+            'on_complete': lambda request: self.display_delete_result(request),
+        }
+        url = u'https://www.googleapis.com/drive/v3/files/15re7UE6hyRn9QKdfdemT43ZaZRTzKrkh'
+        self._provider.prepare_request('delete', url, request_params = request_params).request()
+
+    def display_delete_result(self, request):
+        import ipdb; ipdb.set_trace()
+        from IPython import embed; embed(colors="neutral")
+        self._progress_dialog.close()
+        color = 'lime'
+        ban = self._common_addon.getLocalizedString(32013)
+        if request.response_text == 'Not Found' or request.response_code == 429:
+            color = 'red'
+            ban = self._common_addon.getLocalizedString(32033)
+        self._dialog.ok(self._addon_name, 
+                        self._addon.getLocalizedString(32072) % '[B][COLOR %s]%s[/COLOR][/B]' % (color, ban,),
+                        self._addon.getLocalizedString(32073) % '[B]%s[/B]' % Utils.str(request.response_code),
+                        request.response_text
+        )
+
 if __name__ == '__main__':
     GoogleDriveAddon().route()
