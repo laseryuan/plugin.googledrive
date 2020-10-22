@@ -1,0 +1,10 @@
+image: lasery/gitpod-workspace-full
+
+github:
+  prebuilds:
+    branches: true
+
+tasks:
+  - 
+    command: |
+      alias tmux="tmux -2"
