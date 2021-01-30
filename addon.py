@@ -171,11 +171,60 @@ class GoogleDriveAddon(CloudDriveAddon):
             p = params.copy()
             p['action'] = 'check_google_ban'
             context_options.append((self._addon.getLocalizedString(32071), 'RunPlugin('+self._addon_url + '?' + urllib.urlencode(p)+')'))
-            p['action'] = 'play_stream_format'
-            cmd = 'PlayMedia(%s?%s)' % (self._addon_url, urllib.urlencode(p),)
-            context_options.append((self._addon.getLocalizedString(32076), cmd))
+            p = params.copy()
+            p['action'] = 'import_bookmarks'
+            context_options.append(("Load bookmarks (GDrive image)", 'RunPlugin('+self._addon_url + '?' + urllib.urlencode(p)+')'))
         return context_options
     
+    def import_bookmarks(self, driveid, item_driveid=None, item_id=None):
+        self._provider.configure(self._account_manager, driveid)
+
+        #  self._progress_dialog.update(0, '')
+        #  color = 'lime'
+        #  ban = self._common_addon.getLocalizedString(32013)
+
+        item = self._provider.get_item(item_driveid=item_driveid, item_id=item_id, find_bookmarks=True, include_download_info = True)
+        bookmarks = []
+        for bookmark in item['bookmarks']:
+            bookmarks.append(self._get_item_play_url(urllib.quote(Utils.str(bookmark['name'])), driveid, Utils.default(Utils.get_safe_value(bookmark, 'drive_id'), driveid), bookmark['id'], True))
+            url = bookmark['download_info']['url']
+            request_params = {
+                'on_complete': lambda request: self.save_bookmark_image(request.response_text),
+            }
+            request = self._provider.prepare_request('get', url)
+            response = request.request()
+            if request.response_code == 403 or request.response_code == 429:
+                color = 'red'
+                ban = self._common_addon.getLocalizedString(32033)
+            else:
+                self.save_bookmark_image(response, bookmark["name"])
+                item_path = 'plugin://plugin.googledrive/?item_id=%s&driveid=%s&item_driveid=%s&action=play&content_type=video' % (item_id, driveid, item_driveid)
+                p = { 'mode': 'import_image',
+                 'item_label': item["name"],
+                 'image_name': bookmark["name"],
+                 'item_path': item_path,
+                }
+                addon_id = 'context.item.savebookmarks'
+                KodiUtils.run_plugin(addon_id, p)
+
+        #  self._progress_dialog.close()
+        #  self._dialog.ok(self._addon_name, 
+                        #  self._addon.getLocalizedString(32072) % '[B][COLOR %s]%s[/COLOR][/B]' % (color, ban,)
+        #  )
+
+
+    def save_bookmark_image(self, content, image_name):
+        f = None
+        file_path = xbmc.translatePath('special://temp') + image_name
+        try:
+            f = KodiUtils.file(file_path, 'w')
+            f.write(str(content))
+        except:
+            return False
+        finally:
+            if f:
+                f.close()
+
     def check_google_ban(self, driveid, item_driveid=None, item_id=None):
         self._provider.configure(self._account_manager, driveid)
         self._progress_dialog.update(0, '')

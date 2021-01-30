@@ -353,6 +353,19 @@ class GoogleDrive(Provider):
             self._items_cache.set(key, item)
         return item
     
+    def get_bookmarks(self, parent, name, item_driveid=None, include_download_info=False):
+        parameters = self.prepare_parameters()
+        item_driveid = Utils.default(item_driveid, self._driveid)
+        bookmarks = []
+        parameters['fields'] = 'files(' + self._get_field_parameters() + ')'
+        parameters['q'] = 'name contains \'%s\'' % Utils.str(Utils.remove_extension(name)).replace("'","\\'")
+        files = self.get('/files', parameters = parameters)
+        for f in files['files']:
+            bookmark = self._extract_item(f, include_download_info)
+            if bookmark['name_extension'].lower() in ('jpg','png'):
+                bookmarks.append(bookmark)
+        return bookmarks
+    
     def get_subtitles(self, parent, name, item_driveid=None, include_download_info=False):
         parameters = self.prepare_parameters()
         item_driveid = Utils.default(item_driveid, self._driveid)
@@ -367,7 +380,7 @@ class GoogleDrive(Provider):
                 subtitles.append(subtitle)
         return subtitles
     
-    def get_item(self, item_driveid=None, item_id=None, path=None, find_subtitles=False, include_download_info=False):
+    def get_item(self, item_driveid=None, item_id=None, path=None, find_subtitles=False, find_bookmarks=False, include_download_info=False):
         parameters = self.prepare_parameters()
         item_driveid = Utils.default(item_driveid, self._driveid)
         parameters['fields'] = self._get_field_parameters()
@@ -383,6 +396,12 @@ class GoogleDrive(Provider):
             subtitles = self.get_subtitles(item['parent'], item['name'], item_driveid, include_download_info)
             if subtitles:
                 item['subtitles'] = subtitles
+
+        if find_bookmarks:
+            bookmarks = self.get_bookmarks(item['parent'], item['name'], item_driveid, include_download_info)
+            if bookmarks:
+                item['bookmarks'] = bookmarks
+
         return item
     
     def changes(self):
