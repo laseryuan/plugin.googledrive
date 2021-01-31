@@ -171,7 +171,9 @@ class GoogleDriveAddon(CloudDriveAddon):
             p = params.copy()
             p['action'] = 'check_google_ban'
             context_options.append((self._addon.getLocalizedString(32071), 'RunPlugin('+self._addon_url + '?' + urllib.urlencode(p)+')'))
-            p = params.copy()
+            p['action'] = 'play_stream_format'
+            cmd = 'PlayMedia(%s?%s)' % (self._addon_url, urllib.urlencode(p),)
+            context_options.append((self._addon.getLocalizedString(32076), cmd))
             p['action'] = 'import_bookmarks'
             context_options.append(("Load bookmarks (GDrive image)", 'RunPlugin('+self._addon_url + '?' + urllib.urlencode(p)+')'))
         return context_options
